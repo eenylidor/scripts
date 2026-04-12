@@ -28,4 +28,3 @@ This utility script initializes the **QEMU user-mode emulation** environment req
 
 ---
 *Maintained by Lidor Yaya*
-EOF
