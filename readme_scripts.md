@@ -1,4 +1,3 @@
-cat << 'EOF' > README.md
 # 🛠️ Engineering Scripts Toolbox
 
 A collection of utility scripts to automate development environments for embedded systems and data analysis.
