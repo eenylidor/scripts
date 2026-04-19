@@ -79,13 +79,13 @@ if [[ "$confirm" == [yY] || "$confirm" == [yY][eE][sS] ]]; then
     # Instructions for the user to follow in the second terminal
     cat << EOF
 Inside a separate terminal (ALT + SHIFT + +) run:
-  1. cd ~/projects/embedded/lab2 
-  2. gdb-multiarch boot.elf
-  3. target remote :1234
-  4. info registers
-  5. x/6i \$pc
-  6. info files
-  7. stepi
+  1. cd ~/projects/embedded/lab2 -- to navigate to the project directory
+  2. gdb-multiarch boot.elf -- to start GDB with the boot.elf file
+  3. target remote :1234 -- to connect to the QEMU instance
+  4. info registers sp r0 r1 r2 -- to monitor only registers sp,r0,r1,r2 ( after each stepi command )
+  5. x/6i \$pc -- to show the first 6 lines of the instructions
+  6. info files -- to display information about the loaded files
+  7. stepi -- to execute one step
 
   8. To close the 2nd terminal, press (CTRL + SHIFT + W)
 EOF
