@@ -20,10 +20,10 @@ A dedicated project generator that streamlines the creation of C/C++ development
 
 ---
 
-## 🕹️ init_qemu.sh
-This utility script initializes the **QEMU user-mode emulation** environment required to run ARM binaries on an x86_64 host (like your Windows laptop). It checks for the necessary emulation binaries and ensures the system is capable of executing cross-compiled code without needing physical ARM hardware.
+## 🕹️ embedded.sh
+This interactive script installs and performs essential steps to support **QEMU emulation** and contanins the necessary lecture commands to run the emulator and GDB multiarch debugger. It provides a user-friendly menu to guide you through the setup process, ensuring that you have the tools needed to develop and debug embedded applications effectively.
 
-* **Usage:** `./init_qemu.sh`
+* **Usage:** `./embedded.sh`
 * **Example:** Run this before attempting `make run-arm` in any of your project folders to ensure the emulation layer is active.
 
 ---
