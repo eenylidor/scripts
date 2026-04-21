@@ -65,36 +65,37 @@ chmod +x boot.elf
 
 echo "------------------------------------------------"
 echo "The compilation is complete."
-echo "Note: Running QEMU with -S and -s will freeze the CPU and wait for a GDB connection."
-echo "To start execution, you will need to connect GDB or press 'c' in the QEMU monitor."
 echo "------------------------------------------------"
 
 # Prompt the user for confirmation
-read -p "Do you want to run the QEMU simulation? (y/n): " confirm
+read -p "Do you want to run the QEMU debugger? (y/n): " confirm
 
 if [[ "$confirm" == [yY] || "$confirm" == [yY][eE][sS] ]]; then
-    echo "Starting QEMU..."
+    echo "Starting emulation and debugger..."
     echo "------------------------------------------------"
     
     # Instructions for the user to follow in the second terminal
     cat << EOF
-Inside a separate terminal (ALT + SHIFT + +) run:
-  1. cd ~/projects/embedded/lab2 -- to navigate to the project directory
-  2. gdb-multiarch boot.elf -- to start GDB with the boot.elf file
-  3. target remote :1234 -- to connect to the QEMU instance
-  4. info registers sp r0 r1 r2 -- to monitor only registers sp,r0,r1,r2 ( after each stepi command )
-  5. x/6i \$pc -- to show the first 6 lines of the instructions
-  6. info files -- to display information about the loaded files
-  7. stepi -- to execute one step
-
-  8. To close the 2nd terminal, press (CTRL + SHIFT + W)
+   target remote :1234 -- to connect to the QEMU instance
+   info registers sp r0 r1 r2 -- to monitor only registers sp,r0,r1,r2 ( after each stepi command )
+   x/6i \$pc -- to show the first 6 lines of the instructions
+   info files -- to display information about the loaded files
+   stepi -- to execute one step
+   exit -- to exit GDB
 EOF
     echo "------------------------------------------------"
 
     # Execute the QEMU emulator with tracing enabled
     qemu-system-arm -M virt -cpu cortex-a15 -nographic \
        -S -s -d in_asm,cpu -D qemu_trace.log \
-       -device loader,file=boot.elf,cpu-num=0
+       -device loader,file=boot.elf,cpu-num=0 &
+     # The -S option tells QEMU to start in a paused state, waiting for a GDB connection before executing any instructions.
+     # The -s option is a shorthand for -gdb tcp::1234, which tells QEMU to listen for a GDB connection on TCP port 1234. This allows you
+     echo "QEMU_PID = $!"
+     sleep 5 
+     QEMU_PID=$! # to get the PID of the QEMU process
+     gdb-multiarch boot.elf # to start GDB multiarch with the boot.elf file
+     kill -9 $QEMU_PID
 else
-    echo "Exiting without running QEMU."
+    echo "Exiting without running GDB multiarch."
 fi
