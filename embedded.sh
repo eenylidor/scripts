@@ -76,7 +76,8 @@ read -p "Do you want to run the QEMU debugger? (y/n): " confirm
 if [[ "$confirm" == [yY] || "$confirm" == [yY][eE][sS] ]]; then
     echo "Starting emulation and debugger..."
 echo "-------------------------------------------------------------------------------------"
-    
+     cd ~/projects/embedded/lab2
+   
     # Instructions for the user to follow in the second terminal
     cat << EOF
 	target remote :1234 -- to connect to the QEMU instance
