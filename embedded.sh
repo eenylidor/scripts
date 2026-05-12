@@ -189,8 +189,8 @@ while [ "$STAY" = "true" ]; do
 				echo "Do you wish to download busybox ? (y/n): "
 				read -p "------------------------Enter your choice (y/n):---------------------------" download_busybox
 				if [[ "$download_busybox" == [yY] || "$download_busybox" == [yY][eE][sS] ]]; then
-					mkdir -p ~/projects/embedded/lab3/busybox
-					cd ~/projects/embedded/lab3/busybox
+					mkdir -p ~/projects/embedded/lab3
+					cd ~/projects/embedded/lab3
 					wget https://busybox.net/downloads/busybox-1.36.1.tar.bz2
 					tar -xjf busybox-1.36.1.tar.bz2
 				fi	
@@ -198,7 +198,7 @@ while [ "$STAY" = "true" ]; do
 				echo "do you wish create initramfs image with busybox ? (y/n): "
 				read create_initramfs_choice
 				if [[ "$create_initramfs_choice" == [yY] || "$create_initramfs_choice" == [yY][eE][sS] ]]; then
-					cd ~/projects/embedded/lab3/busybox/busybox-1.36.1
+					cd ~/projects/embedded/lab3/busybox-1.36.1
 					make distclean
 					make defconfig
 					sed -i 's/^# CONFIG_STATIC is not set/CONFIG_STATIC=y/' .config
@@ -225,9 +225,33 @@ while [ "$STAY" = "true" ]; do
 					#!/bin/sh
 					mount -t proc none /proc
 					mount -t sysfs none /sys
+					mount -t devtmpfs none /dev
+					busybox clear
+					busybox sleep 1
+					busybox clear
+					busybox sleep 1
+					busybox clear
 					echo "Minimal Linux Boot Successful"
+					busybox sleep 2
 					exec /bin/sh
 					EOF
+
+					# cat <<-'EOF' > init
+					# #!/bin/sh
+					# mount -t proc none /proc
+					# mount -t sysfs none /sys
+					# mount -t devtmpfs none /dev
+					# busybox clear
+					# busybox sleep 1
+					# busybox clear
+					# busybox sleep 1
+					# busybox clear
+					# echo "Minimal Linux Boot Successful"
+					# busybox sleep 2
+					# /bin/gpio_control_static_arm &
+					# exec /bin/sh
+					# EOF
+
 					chmod +x init
 					cd .. # to return to the initramfs directory
 					find . | cpio -H newc -ov --owner root:root > ../initramfs.cpio
@@ -267,7 +291,14 @@ while [ "$STAY" = "true" ]; do
 			#!/bin/sh
 			mount -t proc none /proc
 			mount -t sysfs none /sys
-			$elf_file "MoooooNimal linux"
+			busybox clear
+			busybox sleep 1
+			busybox clear
+			busybox sleep 1
+			busybox clear
+			echo "Minimal Linux Boot Successful"
+			busybox sleep 2
+			echo "to run $elf_file cd to /bin and ./$elf_file"
 			exec /bin/sh
 			EOF
 
