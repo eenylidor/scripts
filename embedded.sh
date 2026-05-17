@@ -76,7 +76,6 @@ echo "--------------------------------------------------------------------------
 
 run_debugger(){
 read -p "Do you want to run the QEMU debugger? (y/n): " confirm
-
 if [[ "$confirm" == [yY] || "$confirm" == [yY][eE][sS] ]]; then
     echo "Starting emulation and debugger..."
 echo "-------------------------------------------------------------------------------------"
@@ -121,7 +120,7 @@ while [ "$STAY" = "true" ]; do
 	echo " "
 	echo "download & build busybox  - choose 2	  		  				  	     			   "
 	echo " "
-	echo "import statically compiled 32b elf from ~/projects/embedded/lab3- choose 3	  	   "
+	echo "import statically compiled 32bit elf from ~/projects/embedded/lab3- choose 3	  	   "
 	echo " "
 	echo "run the kernel with the initramfs image - choose 4      		  		  			   "
 	echo " "
@@ -223,32 +222,52 @@ while [ "$STAY" = "true" ]; do
 
 					cat <<-'EOF' > init
 					#!/bin/sh
-					mount -t proc none /proc
-					mount -t sysfs none /sys
-					mount -t devtmpfs none /dev
-					busybox clear
-					busybox sleep 1
-					busybox clear
-					busybox sleep 1
+
+					# initialization block
+					mount -t proc none /proc # Mount the proc filesystem
+					mount -t sysfs none /sys # Mount the sys filesystem
+					mount -t devtmpfs none /dev # Mount the devtmpfs filesystem
+
+					# welcome block
 					busybox clear
 					echo "Minimal Linux Boot Successful"
-					busybox sleep 2
-					exec /bin/sh
+					busybox sleep 3
+
+					# install busybox block
+					busybox clear
+					echo "installing busybox from /bin/busybox..."
+					sleep 3
+					cd /bin
+					busybox --install
+					clear
+
+					# introduction block - listing statically compiled binaries which have the suffix '_static_arm' in their name from /bin directory  
+					ls | grep '_static_arm' > available.md
+					clear
+					echo "Welcome to the minimal Linux environment with BusyBox!"
+					echo "the following programs are available in the /bin directory:"
+					cat available.md
+					sleep 5
+					exec /bin/sh 
 					EOF
+
+					# EXAMPLE - 1 to make a program run on startup add it's execution command to the init file before gzipping initramfs.cpio.
+					# EXAMPLE - 2 to add built-in variable to a program , add it to the init script + the variable 
 
 					# cat <<-'EOF' > init
 					# #!/bin/sh
 					# mount -t proc none /proc
 					# mount -t sysfs none /sys
 					# mount -t devtmpfs none /dev
-					# busybox clear
-					# busybox sleep 1
-					# busybox clear
-					# busybox sleep 1
-					# busybox clear
-					# echo "Minimal Linux Boot Successful"
-					# busybox sleep 2
+
+					#------ EXAMPLE - 1 ---------- 
 					# /bin/gpio_control_static_arm &
+					#------ EXAMPLE - 1 ----------
+
+					#------ EXAMPLE - 2 ---------- 
+					# /bin/cowsay "moooo"
+					#------ EXAMPLE - 2 ----------
+
 					# exec /bin/sh
 					# EOF
 
@@ -269,7 +288,8 @@ while [ "$STAY" = "true" ]; do
 					echo "-------------------------------------------------------------------------------------"
 		elif [[ "$lab3_choice" == [3] ]]; then
 			clear
-			echo "type in the exact statically compiled 32b arm elf file_name you wish to import( must be in ~/projects/embedded/lab3 ):"
+			echo "Type in the exact -statically compiled Binary- file_name you wish to import"
+			echo "the file must be in ~/projects/embedded/lab3 ):"
 			read file_name
 			elf_file=$(echo "$file_name" | xargs) # to trim any leading or trailing whitespace from the input
 			cd ~/projects/embedded/lab3
@@ -289,15 +309,13 @@ while [ "$STAY" = "true" ]; do
 
 			cat <<-EOF > init
 			#!/bin/sh
-			mount -t proc none /proc
-			mount -t sysfs none /sys
+			# initialization
+			mount -t proc none /proc # Mount the proc filesystem
+			mount -t sysfs none /sys # Mount the sys filesystem
+			mount -t devtmpfs none /dev # Mount the devtmpfs filesystem
 			busybox clear
-			busybox sleep 1
 			busybox clear
-			busybox sleep 1
 			busybox clear
-			echo "Minimal Linux Boot Successful"
-			busybox sleep 2
 			echo "to run $elf_file cd to /bin and ./$elf_file"
 			exec /bin/sh
 			EOF
@@ -382,7 +400,7 @@ while [ "$STAY" = "true" ]; do
 						do you wish to launch minimal Linux (initramfs is required - lab3 - opt2) ?
 						
 						0. No, return to the lab3 menu.
-						1. Yes, launch minimal Linux with QEMU.
+						1. Yes, re-gzip initramfs and launch minimal Linux with QEMU.
 						2. yes, launch minimal Linux with QEMU and attach the SD card image (transfer.img) to it.
 						EOF
 				read -p "------------------------Enter your choice (0, 1 or 2):---------------------------" launch_choice
@@ -395,7 +413,12 @@ while [ "$STAY" = "true" ]; do
 				elif [[ "$launch_choice" == [1] ]]; then
 					STAY="false"
 					clear
-					cd ~/projects/embedded/lab3
+					cd ~/projects/embedded/lab3/initramfs # go to the initramfs directory
+					find . | cpio -H newc -ov --owner root:root > ../initramfs.cpio
+					cd ~/projects/embedded/lab3 # go to the lab3 directory
+					INIT_PATH=/$(cpio -t < initramfs.cpio 2>/dev/null | grep -E "/init$") # keeps the path of init as a parameter before gzipping initramfs.cpio
+					gzip -f initramfs.cpio #re-gzip the initramfs.cpio in case it was modified
+					# launch qemu with the initramfs image and the linux kernel built in lab3
 					qemu-system-arm \
 					-M vexpress-a15 \
 					-cpu cortex-a15 \
@@ -407,9 +430,15 @@ while [ "$STAY" = "true" ]; do
 					-append "console=ttyAMA0 rdinit=${INIT_PATH}"
 
 				elif [[ "$launch_choice" == [2] ]]; then
-					clear
 					STAY="false"
-					cd ~/projects/embedded/lab3
+					clear
+
+					cd ~/projects/embedded/lab3/initramfs # go to the initramfs directory
+					find . | cpio -H newc -ov --owner root:root > ../initramfs.cpio
+					cd ~/projects/embedded/lab3 # go to the lab3 directory
+					INIT_PATH=/$(cpio -t < initramfs.cpio 2>/dev/null | grep -E "/init$") # keeps the path of init as a parameter before gzipping initramfs.cpio
+					gzip -f initramfs.cpio #re-gzip the initramfs.cpio in case it was modified
+					# launch qemu with the initramfs image, the linux kernel built in lab3 and attach the SD card image (transfer.img) to it
 					qemu-system-arm \
 					-M vexpress-a15 \
 					-cpu cortex-a15 \
@@ -418,7 +447,7 @@ while [ "$STAY" = "true" ]; do
 					-kernel build-arm/arch/arm/boot/zImage \
 					-dtb build-arm/arch/arm/boot/dts/arm/vexpress-v2p-ca15-tc1.dtb \
 					-initrd initramfs.cpio.gz \
-					-drive file=/home/lidor/projects/embedded/lab3/transfer.img,format=raw,if=sd \
+					-drive file=/home/lidor/projects/embedded/lab3/transfer.img,format=raw,if=sd \ 
 					-append "console=ttyAMA0 rdinit=${INIT_PATH}"		
 				else
 					echo "Invalid choice, returning to the lab3 menu."
